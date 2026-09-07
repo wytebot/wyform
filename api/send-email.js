@@ -1,0 +1,6 @@
+import {googleAccessToken} from './google-token.js';
+import {getUser,json,method,supabaseAdmin} from './_supabase.js';
+function b64url(s){return Buffer.from(s).toString('base64url')}
+function mime(to,from,subject,html){return [`From: ${from}`,`To: ${to}`,`Subject: ${subject}`,'MIME-Version: 1.0','Content-Type: text/html; charset=UTF-8','',html].join('\r\n')}
+export async function sendViaGmail(userId,to,subject,html){const token=await googleAccessToken(userId);const db=supabaseAdmin();const {data}=await db.from('integrations').select('google_email').eq('owner_id',userId).eq('provider','google').single();const raw=b64url(mime(to,data.google_email,subject,html));const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({raw})});if(!r.ok)throw new Error('Gmail could not send the message.');return r.json()}
+export default async function handler(req,res){if(!method(req,res,['POST']))return;try{const u=await getUser(req);const b=req.body||{};const result=await sendViaGmail(u.uid,String(b.to||u.email),String(b.subject||'WyForm message'),String(b.html||''));return json(res,200,{ok:true,result});}catch(e){return json(res,500,{error:e.message||'Email failed.'})}}

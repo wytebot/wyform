@@ -1,0 +1,2 @@
+import {auth} from './firebase';
+export async function api(path,options={}){const token=auth.currentUser?await auth.currentUser.getIdToken():'';const headers={...(options.body instanceof FormData?{}:{'Content-Type':'application/json'}),...(options.headers||{})};if(token)headers.Authorization=`Bearer ${token}`;const r=await fetch(path,{...options,headers});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Request failed');return d}

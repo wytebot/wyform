@@ -1,0 +1,2 @@
+import {supabaseAdmin,json,method} from './_supabase.js';
+export default async function handler(req,res){if(!method(req,res,['GET']))return;try{const key=String(req.query?.key||'');if(!key)return json(res,400,{error:'Missing key'});const {data,error}=await supabaseAdmin().from('forms').select('id,name,form_key,domain,branding,auto_reply,success_message').eq('form_key',key).eq('active',true).single();if(error||!data)return json(res,404,{error:'Form not found'});return json(res,200,{form:data});}catch(e){return json(res,500,{error:e.message||'Failed'})}}
