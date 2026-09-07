@@ -4,6 +4,82 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/forms-public",
+      "destination": "/api/forms?route=forms-public"
+    },
+    {
+      "source": "/api/form-submission",
+      "destination": "/api/forms?route=form-submission"
+    },
+    {
+      "source": "/api/form-stats",
+      "destination": "/api/forms?route=form-stats"
+    },
+    {
+      "source": "/api/google-auth",
+      "destination": "/api/google?route=google-auth"
+    },
+    {
+      "source": "/api/google-callback",
+      "destination": "/api/google?route=google-callback"
+    },
+    {
+      "source": "/api/google-token",
+      "destination": "/api/google?route=google-token"
+    },
+    {
+      "source": "/api/google-drive",
+      "destination": "/api/google?route=google-drive"
+    },
+    {
+      "source": "/api/gmail-status",
+      "destination": "/api/google?route=gmail-status"
+    },
+    {
+      "source": "/api/sheets-sync",
+      "destination": "/api/google?route=sheets-sync"
+    },
+    {
+      "source": "/api/billing-status",
+      "destination": "/api/billing?route=billing-status"
+    },
+    {
+      "source": "/api/flutterwave-v4",
+      "destination": "/api/billing?route=flutterwave-v4"
+    },
+    {
+      "source": "/api/paystack-webhook",
+      "destination": "/api/webhooks?route=paystack-webhook"
+    },
+    {
+      "source": "/api/flutterwave-webhook",
+      "destination": "/api/webhooks?route=flutterwave-webhook"
+    },
+    {
+      "source": "/api/process-delivery-jobs",
+      "destination": "/api/jobs?route=process-delivery-jobs"
+    },
+    {
+      "source": "/api/maintenance",
+      "destination": "/api/jobs?route=maintenance"
+    },
+    {
+      "source": "/api/send-email",
+      "destination": "/api/email"
+    },
+    {
+      "source": "/api/submissions",
+      "destination": "/api/submissions"
+    },
+    {
+      "source": "/api/profile",
+      "destination": "/api/profile"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/health"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
