@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {Copy,Plus,Trash2,Check,Code2,Settings2,Search,LayoutTemplate,ArrowRight,Eye,FileText} from 'lucide-react';
 import {api} from '../lib/api';
 import {FORM_TEMPLATES,TEMPLATE_CATEGORIES,fieldMarkup} from '../lib/formTemplates';
@@ -6,10 +6,12 @@ import {FORM_TEMPLATES,TEMPLATE_CATEGORIES,fieldMarkup} from '../lib/formTemplat
 export default function Forms(){
  const [forms,setForms]=useState([]),[name,setName]=useState('contact'),[domain,setDomain]=useState(''),[busy,setBusy]=useState(false),[msg,setMsg]=useState('');
  const [showTemplates,setShowTemplates]=useState(false),[query,setQuery]=useState(''),[category,setCategory]=useState('All'),[preview,setPreview]=useState(null);
+ const domainInputRef=useRef(null),previewRef=useRef(null);
  const load=()=>api('/api/forms').then(x=>setForms(x.forms||[])).catch(e=>setMsg(e.message));useEffect(load,[]);
+ useEffect(()=>{if(preview)previewRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'})},[preview]);
  const filtered=useMemo(()=>FORM_TEMPLATES.filter(t=>(category==='All'||t.category===category)&&(!query||`${t.name} ${t.description} ${t.tags.join(' ')}`.toLowerCase().includes(query.toLowerCase()))),[query,category]);
  async function create(e,template=null,templateName=null){e?.preventDefault();setBusy(true);setMsg('');try{const t=template||FORM_TEMPLATES.find(x=>x.id==='blank');await api('/api/forms',{method:'POST',body:JSON.stringify({name:templateName||name||t.name,domain,templateId:t.id,templateCategory:t.category,description:t.description})});setName('contact');setDomain('');setShowTemplates(false);await load();setMsg(`${t.name} endpoint created.`)}catch(e){setMsg(e.message)}finally{setBusy(false)}}
- async function useTemplate(t){if(!domain){setMsg('Enter your website URL first, then choose a template.');setShowTemplates(true);return}setName(t.id==='blank'?'contact':t.name);await create(null,t,t.id==='blank'?'contact':t.name)}
+ async function useTemplate(t){if(!domain){setMsg('Enter your website URL first, then choose a template.');domainInputRef.current?.focus();domainInputRef.current?.scrollIntoView({behavior:'smooth',block:'center'});return}setName(t.id==='blank'?'contact':t.name);await create(null,t,t.id==='blank'?'contact':t.name)}
  async function remove(id){if(!confirm('Delete this form and its submissions?'))return;try{await api(`/api/forms?id=${encodeURIComponent(id)}`,{method:'DELETE'});await load()}catch(e){setMsg(e.message)}}
  return <>
   <div className="pageHead"><div><div className="eyebrow">FORM ENDPOINTS</div><h1>Forms</h1><p className="muted">Create a production-ready endpoint for almost any profession, workflow or website.</p></div><button className="primary" onClick={()=>setShowTemplates(true)}><LayoutTemplate size={16}/> Templates</button></div>
@@ -18,9 +20,10 @@ export default function Forms(){
   <div className="card"><div className="cardTitle"><h3>Your form keys</h3><span className="badge">{forms.length} forms</span></div>{forms.map(f=><FormRow key={f.id} form={f} remove={remove}/>)}{!forms.length&&<div className="emptyMini">No forms yet.</div>}</div>
   {showTemplates&&<div className="modalBackdrop" onMouseDown={e=>e.target===e.currentTarget&&setShowTemplates(false)}><div className="templateModal">
     <div className="templateHead"><div><div className="eyebrow">TEMPLATE LIBRARY</div><h2>Choose a form</h2><p className="muted">Search or scroll. Every template is a starting point—you can customize your website fields.</p></div><button className="iconBtn" onClick={()=>setShowTemplates(false)}>×</button></div>
+    <div className="modalDomainRow"><input ref={domainInputRef} value={domain} onChange={e=>setDomain(e.target.value)} placeholder="Your website URL (e.g. https://example.com) — required to use a template"/>{msg&&<p className="tiny">{msg}</p>}</div>
     <div className="templateToolbar"><div className="searchBox"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search templates: invoice, hiring, booking…"/></div><div className="categoryScroll">{TEMPLATE_CATEGORIES.map(c=><button key={c} className={category===c?'category active':'category'} onClick={()=>setCategory(c)}>{c}</button>)}</div></div>
     <div className="templateGrid">{filtered.map(t=><div className="templateCard" key={t.id}><div className="templateIcon">{t.icon}</div><div className="templateCardBody"><div className="templateMeta"><span className="badge">{t.category}</span><span className="tiny">{t.fields.length} suggested fields</span></div><h3>{t.name}</h3><p className="muted">{t.description}</p><div className="templateActions"><button className="secondary" onClick={()=>setPreview(t)}><Eye size={14}/> Preview</button><button className="primary" disabled={busy} onClick={()=>useTemplate(t)}>Use template <ArrowRight size={14}/></button></div></div></div>)}{!filtered.length&&<div className="emptyMini">No templates match “{query}”. Try another profession or workflow.</div>}</div>
-    {preview&&<div className="previewPanel"><div className="cardTitle"><div><h3>{preview.icon} {preview.name}</h3><p className="tiny">Suggested HTML fields</p></div><button className="iconBtn" onClick={()=>setPreview(null)}>×</button></div><pre className="codeBlock">{`<form data-wyform="YOUR_FORM_KEY">\n${fieldMarkup(preview)}\n<button type="submit">Submit</button>\n</form>`}</pre><p className="tiny"><FileText size={13}/> Copy these fields into your site builder, then add your generated WyForm key.</p></div>}
+    {preview&&<div className="previewPanel" ref={previewRef}><div className="cardTitle"><div><h3>{preview.icon} {preview.name}</h3><p className="tiny">Suggested HTML fields</p></div><button className="iconBtn" onClick={()=>setPreview(null)}>×</button></div><pre className="codeBlock">{`<form data-wyform="YOUR_FORM_KEY">\n${fieldMarkup(preview)}\n<button type="submit">Submit</button>\n</form>`}</pre><p className="tiny"><FileText size={13}/> Copy these fields into your site builder, then add your generated WyForm key.</p></div>}
   </div></div>}
  </>
 }
