@@ -46,5 +46,8 @@
       "path": "/api/maintenance",
       "schedule": "30 3 * * *"
     }
+  ],
+  "regions": [
+    "iad1"
   ]
 }
