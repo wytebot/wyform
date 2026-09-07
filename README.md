@@ -71,3 +71,28 @@ See `.env.example`. Never expose Supabase service role, Google client secret, OA
 ## Important
 
 The local environment may not have enough network time to complete `npm install`. Before release, run `npm ci` and `npm run build` in CI/Vercel and inspect the deployment logs.
+
+
+## WyForm 4.0 upgrade
+
+- Keeps exactly **9 Vercel serverless function entrypoints** under `/api` (below the 10-function limit).
+- Additional backend modules continue to route through the same entrypoints.
+- Hardened public submission validation and security headers.
+- Webhook delivery rejects private/internal destinations using DNS resolution, including IPv6 private/link-local ranges.
+- Delivery jobs support atomic `SKIP LOCKED` claiming through `claim_delivery_jobs`, preventing concurrent cron invocations from processing the same job twice when the SQL migration is applied.
+- Delivery failures use capped retries with exponential backoff.
+- File upload metadata and request sizes are bounded.
+- Google, Gmail, Sheets, Drive, Paystack and Flutterwave integrations remain behind the same gateway architecture.
+
+### Vercel function count
+`api/` contains 9 physical entrypoint files:
+billing.js, email.js, forms.js, google.js, health.js, jobs.js, profile.js, submissions.js, webhooks.js.
+
+**Function budget remaining: 1.**
+
+
+## Visual Form Builder
+
+WyForm now includes a visual builder for each form endpoint. Users can start from a template or blank form, then add/remove/reorder fields, configure labels, field names, required status, placeholders, help text and options, preview the visitor experience, and copy a complete embed. Supported field types include text, long text, email, phone, number, date, time, URL, dropdown, radio, checkbox, file upload, rating, currency and hidden fields.
+
+The builder stores its field definition in `forms.fields_schema` and does not add another Vercel serverless function.

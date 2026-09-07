@@ -34,6 +34,9 @@ create table if not exists public.forms(
  attachment_mode text not null default 'google_drive',
  drive_folder_id text,
  version integer not null default 1,
+ template_id text default 'blank',
+ template_category text default 'General',
+ description text,
  created_at timestamptz not null default now(),
  updated_at timestamptz not null default now()
 );
@@ -49,6 +52,12 @@ alter table public.forms add column if not exists retention_days integer not nul
 alter table public.forms add column if not exists attachment_mode text not null default 'google_drive';
 alter table public.forms add column if not exists drive_folder_id text;
 alter table public.forms add column if not exists version integer not null default 1;
+alter table public.forms add column if not exists template_id text default 'blank';
+alter table public.forms add column if not exists template_category text default 'General';
+alter table public.forms add column if not exists description text;
+alter table public.forms add column if not exists fields_schema jsonb not null default '[]'::jsonb;
+alter table public.forms add column if not exists builder_title text;
+alter table public.forms add column if not exists builder_description text;
 alter table public.forms add column if not exists updated_at timestamptz not null default now();
 create index if not exists forms_owner_idx on public.forms(owner_id);
 
@@ -148,3 +157,34 @@ alter table public.rate_limits enable row level security;
 alter table public.integrations enable row level security;
 alter table public.billing_events enable row level security;
 alter table public.delivery_jobs enable row level security;
+
+
+-- WyForm 4.0 reliability upgrade: atomically claim queued deliveries.
+create or replace function public.claim_delivery_jobs(p_limit integer default 25)
+returns setof public.delivery_jobs
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  return query
+  with picked as (
+    select id from public.delivery_jobs
+    where status='pending' and next_attempt_at <= now()
+    order by next_attempt_at asc
+    for update skip locked
+    limit greatest(1, least(coalesce(p_limit,25),100))
+  )
+  update public.delivery_jobs j
+     set status='processing', updated_at=now()
+   where j.id in (select id from picked)
+  returning j.*;
+end;
+$$;
+
+create index if not exists delivery_jobs_submission_status_idx
+  on public.delivery_jobs(submission_id,status);
+create index if not exists submissions_form_delivery_idx
+  on public.submissions(form_id,created_at desc,delivery_status);
+revoke all on function public.claim_delivery_jobs(integer) from public;
+grant execute on function public.claim_delivery_jobs(integer) to service_role;
