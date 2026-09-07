@@ -96,3 +96,23 @@ billing.js, email.js, forms.js, google.js, health.js, jobs.js, profile.js, submi
 WyForm now includes a visual builder for each form endpoint. Users can start from a template or blank form, then add/remove/reorder fields, configure labels, field names, required status, placeholders, help text and options, preview the visitor experience, and copy a complete embed. Supported field types include text, long text, email, phone, number, date, time, URL, dropdown, radio, checkbox, file upload, rating, currency and hidden fields.
 
 The builder stores its field definition in `forms.fields_schema` and does not add another Vercel serverless function.
+
+## Google OAuth production setup
+
+Set these Vercel environment variables:
+
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `OAUTH_ENCRYPTION_KEY` (32+ random characters; use a strong secret)
+- `APP_URL` = your exact HTTPS production origin, for example `https://yourdomain.com`
+- `GOOGLE_REDIRECT_URI` = `https://yourdomain.com/api/google-callback` (recommended to set explicitly)
+
+In Google Cloud, create a **Web application** OAuth client and add the exact redirect URI above. The URI must match exactly. Also configure the OAuth consent screen with the same production domain, public home page, privacy policy, and terms where applicable.
+
+WyForm requests only:
+
+- `https://www.googleapis.com/auth/gmail.send`
+- `https://www.googleapis.com/auth/spreadsheets`
+- `https://www.googleapis.com/auth/drive.file`
+
+The browser no longer sends a Firebase ID token in the Google authorization URL. WyForm first authenticates the signed-in user with its backend, then generates a short-lived signed OAuth state and returns the Google authorization URL. OAuth callback state is validated before any Google token is stored.
