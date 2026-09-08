@@ -1,12 +1,12 @@
 import React,{useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {Code2,Inbox,Mail,Table2,ArrowRight,Copy,Check,ShieldAlert,CopyCheck,TrendingUp,HardDrive,Activity} from 'lucide-react';
-import {api} from '../lib/api';
+import {api,copyText} from '../lib/api';
 export default function Dashboard(){
  const [data,setData]=useState({forms:[],submissions:[],summary:{total:0,spam:0,duplicates:0,sources:{},daily:{}}}),[copied,setCopied]=useState(false);
  useEffect(()=>{api('/api/form-stats').then(setData).catch(console.error)},[]);
  const snippet='<script src="https://wyform.ng/widget.js"></script>';
- const copy=()=>{navigator.clipboard?.writeText(snippet);setCopied(true);setTimeout(()=>setCopied(false),1500)};
+ const copy=async()=>{const ok=await copyText(snippet);setCopied(ok);setTimeout(()=>setCopied(false),1500)};
  return <>
   <div className="pageHead"><div><div className="eyebrow">FORM BACKEND</div><h1>The 10-second backend for any HTML form.</h1><p className="muted">One script. One attribute. Submissions land here and can be emailed from your own Gmail.</p></div><Link className="primary" to="/forms"><Code2 size={17}/> Create form</Link></div>
   <div className="stats"><div className="stat"><Code2/><b>{data.forms.length}</b><span>Forms</span></div><div className="stat"><Inbox/><b>{data.submissions.length}</b><span>Recent submissions</span></div><div className="stat"><Mail/><b>0</b><span>WyForm email cost</span></div><div className="stat"><Table2/><b>∞</b><span>Sheets-ready</span></div><div className="stat"><ShieldAlert/><b>{data.summary.spam}</b><span>Spam blocked</span></div><div className="stat"><CopyCheck/><b>{data.summary.duplicates}</b><span>Duplicates flagged</span></div></div>

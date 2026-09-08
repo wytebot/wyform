@@ -1,6 +1,6 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {Copy,Plus,Trash2,Check,Code2,Settings2,Search,LayoutTemplate,ArrowRight,Eye,FileText} from 'lucide-react';
-import {api} from '../lib/api';
+import {api,copyText} from '../lib/api';
 import {FORM_TEMPLATES,TEMPLATE_CATEGORIES,fieldMarkup} from '../lib/formTemplates';
 
 export default function Forms(){
@@ -27,4 +27,4 @@ export default function Forms(){
   </div></div>}
  </>
 }
-function FormRow({form,remove}){const [copied,setCopied]=useState(false);const attr=`<form data-wyform="${form.form_key}">`;const copy=()=>{navigator.clipboard?.writeText(attr);setCopied(true);setTimeout(()=>setCopied(false),1500)};return <div className="formRow"><div className="formIcon"><Code2 size={18}/></div><div className="formInfo"><b>{form.name}</b><small>{form.template_category||'General'} · {form.domain}</small><code>{form.form_key}</code></div><div className="formActions"><button className="secondary" onClick={copy}>{copied?<Check size={15}/>:<Copy size={15}/>} {copied?'Copied':'Copy attribute'}</button><a className="iconBtn" href={`/forms/${form.id}`} title="Configure"><Settings2 size={16}/></a><button className="iconBtn danger" onClick={()=>remove(form.id)}><Trash2 size={16}/></button></div></div>}
+function FormRow({form,remove}){const [copied,setCopied]=useState(false);const attr=`<form data-wyform="${form.form_key}">`;const copy=async()=>{const ok=await copyText(attr);setCopied(ok);if(!ok)alert('Copy failed. Please copy the attribute manually.');setTimeout(()=>setCopied(false),1500)};return <div className="formRow"><div className="formIcon"><Code2 size={18}/></div><div className="formInfo"><b>{form.name}</b><small>{form.template_category||'General'} · {form.domain}</small><code>{form.form_key}</code></div><div className="formActions"><button className="secondary" onClick={copy}>{copied?<Check size={15}/>:<Copy size={15}/>} {copied?'Copied':'Copy attribute'}</button><a className="iconBtn" href={`/forms/${form.id}`} title="Configure"><Settings2 size={16}/></a><button className="iconBtn danger" onClick={()=>remove(form.id)}><Trash2 size={16}/></button></div></div>}
